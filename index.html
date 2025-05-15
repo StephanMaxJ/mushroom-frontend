@@ -83,15 +83,15 @@
       }
 
       weatherInfo.innerHTML = `
-        <h2 class="text-white bg-gray-700 rounded px-4 py-2 text-xl font-semibold mb-4 inline-block shadow">
-         7-day weather average (Historical)
-        </h2>
+       <div class="bg-gray-700 text-white rounded-lg p-4 shadow-md">
+        <h2 class="text-xl font-semibold mb-4">7-day weather average (Historical)</h2>
         <p><strong>🌡 Temperature:</strong> ${data.avg_temperature}°C</p>
         <p><strong>💧 Humidity:</strong> ${data.avg_humidity}%</p>
         <p><strong>🌧 Rain (mm):</strong> ${data.avg_precipitation} mm</p>
         <p><strong>💨 Wind Speed:</strong> ${data.avg_wind_speed} km/h</p>
         <p><strong>🌱 Season:</strong> ${data.season}</p> 
         <p class="${colorClass}">${data.foraging_quality}</p>
+       </div> 
       `;
 
       const mushroomSection = document.getElementById("mushroom-info");
