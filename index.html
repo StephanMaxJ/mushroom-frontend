@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,49 +6,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mushroom Foraging</title>
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+
+  <!-- Mapbox CSS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet" />
 
   <style>
     body {
-      background-image: url('https://everwallpaper.com/cdn/shop/files/1haze-blanketing-forest-wall-mural.jpg?v=1732535080');
+      background-image: url('https://imgur.com/ItlvR8p.jpeg');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
     }
+
+    .mapboxgl-ctrl-geocoder {
+  width: 100% !important;
+  margin: 0 auto !important;
+  max-width: 100% !important;
+  display: flex !important;
+  justify-content: center;
+}
   </style>
 </head>
 
 <body class="font-sans text-gray-800 min-h-screen bg-cover bg-center">
 
-  <!-- Header -->
   <header class="bg-green-600 bg-opacity-90 text-white py-6 text-center shadow-md">
     <h1 class="text-4xl font-bold">Mushroom Foraging Conditions</h1>
   </header>
 
-  <!-- Main Content -->
   <main class="max-w-5xl mx-auto px-4 py-8 bg-white bg-opacity-80 rounded-lg mt-8 shadow-lg">
 
-    <!-- Controls -->
-    <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
-      <label for="suburb" class="font-medium text-lg">Select Suburb:</label>
-      <select id="suburb" class="p-2 border border-gray-300 rounded-md focus:outline-none">
-        <option value="newlands">Newlands</option>
-        <option value="stellenbosch">Stellenbosch</option>
-        <option value="houtbay">Hout Bay</option>
-        <option value="tokai">Tokai</option>
-        <option value="constantia">Constantia</option>
-        <option value="franschhoek">Franschhoek</option>
-        <option value="noordhoek">Noordhoek</option>
-        <option value="swellendam">Swellendam</option>
-        <option value="riversdale">Riversdale</option>
-        <option value="knysna">Knysna</option>
-        <option value="tulbagh">Tulbagh</option>
-        <option value="ceres">Ceres</option>
-        <option value="stormsrivier">Stormsrivier</option>
-        <option value="kzn_midlands">KZN Midlands</option>
-      </select>
-      <button onclick="checkWeather()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
+    <!-- Location Search -->
+    <div class="flex flex-col items-center space-y-4 mb-6">
+      <label for="geocoder" class="font-medium text-lg text-center">Search for your location:</label>
+      <div class="flex justify-center w-full">
+        <div id="geocoder" class="w-full max-w-md mx-auto"></div>
+      </div>      
+      <button id="check-button" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
         Check Foraging Conditions
       </button>
     </div>
@@ -60,17 +58,46 @@
       <h2 class="text-2xl font-semibold mb-4 text-center">Mushrooms that might be around to forage</h2>
       <div id="mushroom-list" class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"></div>
     </section>
-
   </main>
 
+  <!-- Mapbox JS -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+
   <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic3RlcGhhbm1heCIsImEiOiJjbWFndmpiNnYwNGpwMmlzN3Yya3MzeWs3In0.yctGCmSo5bj4Lkeg9OtPbA';  // Replace with your actual Mapbox token
+
+    let selectedCoordinates = null;
+
+    const geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      placeholder: 'Enter your location',
+      mapboxgl: mapboxgl,
+      marker: false,
+      countries: 'ZA' // Restrict search to South Africa
+    });
+
+    geocoder.addTo('#geocoder');
+
+    geocoder.on('result', function (e) {
+      selectedCoordinates = e.result.center;
+    });
+
+    document.getElementById("check-button").addEventListener("click", checkWeather);
+
     async function checkWeather() {
-      const suburb = document.getElementById("suburb").value;
-      const response = await fetch(`https://mushroom-backend-frwl.onrender.com/check?suburb=${suburb}`);
+      if (!selectedCoordinates) {
+        alert("Please select a location first.");
+        return;
+      }
+
+      const [lon, lat] = selectedCoordinates;
+
+      const response = await fetch(`http://127.0.0.1:8000/check?lat=${lat}&lon=${lon}`);
       const data = await response.json();
+
       const weatherInfo = document.getElementById("weather-info");
 
-      // Determine color class based on foraging quality
       let colorClass = '';
       if (data.foraging_quality.includes("Perfect")) {
         colorClass = 'text-yellow-600 font-bold';
@@ -83,15 +110,15 @@
       }
 
       weatherInfo.innerHTML = `
-       <div class="bg-gray-700 text-white rounded-lg p-4 shadow-md">
-        <h2 class="text-xl font-semibold mb-4">7-day weather average (Historical)</h2>
-        <p><strong>🌡 Temperature:</strong> ${data.avg_temperature}°C</p>
-        <p><strong>💧 Humidity:</strong> ${data.avg_humidity}%</p>
-        <p><strong>🌧 Rain (mm):</strong> ${data.avg_precipitation} mm</p>
-        <p><strong>💨 Wind Speed:</strong> ${data.avg_wind_speed} km/h</p>
-        <p><strong>🌱 Season:</strong> ${data.season}</p> 
-        <p class="${colorClass}">${data.foraging_quality}</p>
-       </div> 
+        <div class="bg-gray-700 text-white rounded-lg p-4 shadow-md">
+          <h2 class="text-xl font-semibold mb-4">7-day weather average (Historical)</h2>
+          <p><strong>🌡 Temperature:</strong> ${data.avg_temperature}°C</p>
+          <p><strong>💧 Humidity:</strong> ${data.avg_humidity}%</p>
+          <p><strong>🌧 Rain (mm):</strong> ${data.avg_precipitation} mm</p>
+          <p><strong>💨 Wind Speed:</strong> ${data.avg_wind_speed} km/h</p>
+          <p><strong>🌱 Season:</strong> ${data.season}</p> 
+          <p class="${colorClass}">${data.foraging_quality}</p>
+        </div> 
       `;
 
       const mushroomSection = document.getElementById("mushroom-info");
