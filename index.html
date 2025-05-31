@@ -32,11 +32,19 @@
 
 <body class="font-sans text-gray-800 min-h-screen bg-cover bg-center">
 
-  <header class="bg-green-600 bg-opacity-90 text-white py-6 text-center shadow-md">
-    <h1 class="text-4xl font-bold">Mushroom Foraging Conditions</h1>
+  <header class="bg-green-600 bg-opacity-90 pt-0 pb-2 shadow-md w-full flex justify-center">
+    <div class="w-full max-w-4xl px-4 text-center pt-0">
+      <img 
+        src="https://imgur.com/ZuSrjWH.jpg"  
+        alt="Forager’s Friend Logo"
+        class="h-48 mx-auto object-contain -mt-4"
+      />
+      <p class="text-white font-semibold text-lg -mt-4">
+        Mushroom foraging guide and condition checker
+      </p>
+    </div>
   </header>
-
-  <main class="max-w-5xl mx-auto px-4 py-8 bg-white bg-opacity-80 rounded-lg mt-8 shadow-lg">
+  
 
     <!-- Location Search -->
     <div class="flex flex-col items-center space-y-4 mb-6">
@@ -48,6 +56,7 @@
         Check Foraging Conditions
       </button>
     </div>
+   
 
     <!-- Weather Info -->
     <div id="weather-info" class="text-center mb-8 space-y-2 text-lg"></div>
@@ -92,7 +101,7 @@
 
       const [lon, lat] = selectedCoordinates;
 
-      const response = await fetch(`https://mushroom-backend-frwl.onrender.com/check?lat=${lat}&lon=${lon}`);
+      const response = await fetch(`http://127.0.0.1:8000/check?lat=${lat}&lon=${lon}`);
       const data = await response.json();
 
       const weatherInfo = document.getElementById("weather-info");
@@ -109,15 +118,28 @@
       }
 
       weatherInfo.innerHTML = `
-        <div class="bg-gray-700 text-white rounded-lg p-4 shadow-md">
-          <h2 class="text-xl font-semibold mb-4">7-day weather average (Historical)</h2>
-          <p><strong>🌡 Temperature:</strong> ${data.avg_temperature}°C</p>
-          <p><strong>💧 Humidity:</strong> ${data.avg_humidity}%</p>
-          <p><strong>🌧 Rain (mm):</strong> ${data.avg_precipitation} mm</p>
-          <p><strong>💨 Wind Speed:</strong> ${data.avg_wind_speed} km/h</p>
-          <p><strong>🌱 Season:</strong> ${data.season}</p> 
-          <p class="${colorClass}">${data.foraging_quality}</p>
-        </div> 
+      <div class="relative">
+  <!-- Main Weather Average Box (unchanged) -->
+  <div class="bg-gray-800 text-white rounded-lg p-4 shadow-md space-y-0">
+    <h2 class="text-xl font-semibold">7-day weather average (Historical)</h2>
+    <p><strong>🌡 Temperature:</strong> ${data.avg_temperature}°C</p>
+    <p><strong>💧 Humidity:</strong> ${data.avg_humidity}%</p>
+    <p><strong>🌧 Rain (mm):</strong> ${data.avg_precipitation} mm</p>
+    <p><strong>💨 Wind Speed:</strong> ${data.avg_wind_speed} km/h</p>
+    <p><strong>🌱 Season:</strong> ${data.season}</p>
+    <p class="${colorClass}">${data.foraging_quality || ""}</p>
+  </div>
+
+  <div class="absolute top-2 left-2 w-44 h-36 bg-gray-700 p-3 rounded-xl shadow-md text-white text-sm font-semibold">
+    <h3 class="text-base font-semibold mb-0.5">Today's Forecast</h3>
+    <p class="mb-0">🌡  ${data.forecast_temperature}°C</p>
+    <p class="mb-1">💧  ${data.forecast_humidity}%</p>
+    <p class="mb-1">🌧  ${data.forecast_precipitation} mm</p>
+    <p>💨  ${data.forecast_wind_speed} km/h</p>
+  </div>
+</div>
+
+
       `;
 
       const mushroomSection = document.getElementById("mushroom-info");
@@ -134,7 +156,7 @@
         let imageUrl = '';
         switch (mushroom.toLowerCase()) {
           case 'porcini':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Boletus_edulis_JPG9.jpg/1920px-Boletus_edulis_JPG9.jpg';
+            imageUrl = 'https://i.imgur.com/lanIBpa.jpg';
             break;
           case 'poplar_boletes':
             imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Leccinum_duriusculum_254194.jpg/500px-Leccinum_duriusculum_254194.jpg';
@@ -146,19 +168,19 @@
             imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/2012-07-09_Agaricus_subfloccosus_235732_crop.jpg/1920px-2012-07-09_Agaricus_subfloccosus_235732_crop.jpg';
             break;
           case 'white_parasols':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Chlorophyllum_molybdites.jpg';
+            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/9/93/Macrolepiota_zeyheri.jpg';
             break;
           case 'wood_blewits':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/6/68/Clitocybe_nuda_2008_G1.jpg';
+            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Clitocybe_nuda_%28Fr.%29_H.E._Bigelow_%26_A.H._Sm_267650.jpg/2560px-Clitocybe_nuda_%28Fr.%29_H.E._Bigelow_%26_A.H._Sm_267650.jpg';
             break;
           case 'morels':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Morchella_conica.jpg';
+            imageUrl = 'https://imgur.com/gcqw8Kk.jpeg';
             break;
           case 'blushers':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Amanita.Amerirubescens.001.jpg/1920px-Amanita.Amerirubescens.001.jpg';
+            imageUrl = 'https://i.imgur.com/n6OOn4o.jpg';
             break;
           case 'slippery_jills':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/b/bc/Suillus_acidus_110096.jpg';
+            imageUrl = 'https://i.imgur.com/TNFYxoo.jpg';
             break;
           case 'weeping_bolete':
             imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/K%C3%B6rnchen-R%C3%B6hrling_Suillus_granulatus_1.jpg/1920px-K%C3%B6rnchen-R%C3%B6hrling_Suillus_granulatus_1.jpg';
