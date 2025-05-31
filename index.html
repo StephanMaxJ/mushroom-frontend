@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,22 +33,24 @@
 <body class="font-sans text-gray-800 min-h-screen bg-cover bg-center">
 
   <header class="bg-green-600 bg-opacity-90 pt-0 pb-2 shadow-md w-full flex justify-center">
-  <div class="w-full max-w-4xl px-4 text-center pt-0">
-    <img 
-      src="https://imgur.com/ZuSrjWH.jpg"  
-      alt="Forager’s Friend Logo"
-      class="h-48 mx-auto object-contain -mt-4"
-    />
-    <p class="text-white font-semibold text-lg -mt-4">
-      Mushroom foraging guide and condition checker
-    </p>
-  </div>
-</header>
-
-<main class="max-w-5xl mx-auto px-4 py-8 bg-white bg-opacity-80 rounded-lg mt-8 shadow-lg">
-  <div class="text-right -mt-4">
-    <!-- Button removed, layout preserved -->
-  </div>
+    <div class="w-full max-w-4xl px-4 text-center pt-0">
+      <img 
+        src="https://imgur.com/ZuSrjWH.jpg"  
+        alt="Forager’s Friend Logo"
+        class="h-48 mx-auto object-contain -mt-4"
+      />
+      <p class="text-white font-semibold text-lg -mt-4">
+        Mushroom foraging guide and condition checker
+      </p>
+    </div>
+  </header>
+  
+  <main class="max-w-5xl mx-auto px-4 py-8 bg-white bg-opacity-80 rounded-lg mt-8 shadow-lg">
+    <div class="text-right -mt-4">
+      <a href="glossary.html" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition">
+        🍄‍🟫 Mushroom Guide
+      </a>
+    </div>
 
     <!-- Location Search -->
     <div class="flex flex-col items-center space-y-4 mb-6">
@@ -135,15 +136,21 @@
     <p class="${colorClass}">${data.foraging_quality || ""}</p>
   </div>
 
-  <div class="absolute top-2 left-2 w-36 sm:w-44 h-32 sm:h-36 bg-gray-700 p-3 rounded-xl shadow-md text-white text-sm font-semibold">
-    <h3 class="text-base font-semibold mb-0.5">Today's Forecast</h3>
-    <p class="mb-0">🌡  ${data.forecast_temperature}°C</p>
-    <p class="mb-1">💧  ${data.forecast_humidity}%</p>
-    <p class="mb-1">🌧  ${data.forecast_precipitation} mm</p>
-    <p>💨  ${data.forecast_wind_speed} km/h</p>
-  </div>
+  <div id="forecast-box" class="absolute top-2 left-2 w-44 h-36 bg-gray-700 p-3 rounded-xl shadow-md text-white text-sm font-semibold cursor-pointer transition-all duration-300" onclick="toggleForecast()">
+    <h3 class="text-base font-semibold mb-0.5 flex items-center justify-between">
+        Today's Forecast 
+        <span id="toggle-icon" class="text-xs">−</span>
+    </h3>
+    <div id="forecast-content">
+        <p class="mb-0">🌡  ${data.forecast_temperature}°C</p>
+        <p class="mb-1">💧  ${data.forecast_humidity}%</p>
+        <p class="mb-1">🌧  ${data.forecast_precipitation} mm</p>
+        <p>💨  ${data.forecast_wind_speed} km/h</p>
+    </div>
 </div>
-
+<div id="forecast-mini" class="hidden absolute top-2 left-2 cursor-pointer text-3xl" onclick="toggleForecast()">
+    🌤️
+</div>
 
       `;
 
@@ -218,6 +225,21 @@
         mushroomList.appendChild(mushroomCard);
       });
     }
+
+    function toggleForecast() {
+    const forecastBox = document.getElementById('forecast-box');
+    const forecastMini = document.getElementById('forecast-mini');
+    
+    if (forecastBox.classList.contains('hidden')) {
+        // Expand - show full box, hide emoji
+        forecastBox.classList.remove('hidden');
+        forecastMini.classList.add('hidden');
+    } else {
+        // Minimize - hide full box, show emoji only
+        forecastBox.classList.add('hidden');
+        forecastMini.classList.remove('hidden');
+    }
+}
   </script>
 
 </body>
