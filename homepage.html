@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Forager's Friend - Home</title>
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+
+  <!-- Mapbox CSS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background-image: url('https://imgur.com/ItlvR8p.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .mapboxgl-ctrl-geocoder {
+      width: 100% !important;
+      margin: 0 auto !important;
+      max-width: 100% !important;
+      display: flex !important;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body class="font-sans text-gray-800 min-h-screen bg-cover bg-center">
+
+  <header class="bg-green-600 bg-opacity-90 pt-0 pb-2 shadow-md w-full flex justify-center">
+    <div class="w-full max-w-4xl px-4 text-center pt-0 relative">
+      <img 
+        src="https://imgur.com/ZuSrjWH.jpg"  
+        alt="Forager's Friend Logo"
+        class="h-48 mx-auto object-contain -mt-4"
+      />
+      <p class="text-white font-semibold text-lg -mt-4">
+        Mushroom foraging guide and condition checker
+      </p>
+      
+      <!-- User Navigation -->
+      <div id="user-nav" class="absolute top-4 right-4 text-white text-sm">
+        <div class="flex items-center space-x-2">
+          <span id="username-display" class="font-medium"></span>
+          <a href="dashboard.html" class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-xs transition">Profile</a>
+          <div id="admin-link" class="hidden">
+            <a href="admin.html" class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-xs transition">Admin</a>
+          </div>
+          <button id="logout-btn" class="bg-gray-500 hover:bg-gray-600 px-3 py-1 rounded text-xs transition">Logout</button>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <main class="max-w-5xl mx-auto px-4 py-8 bg-white bg-opacity-80 rounded-lg mt-8 shadow-lg">
+    <div class="text-right -mt-4 mb-6">
+      <a href="glossary.html" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition">
+        🍄‍🟫 Mushroom Guide
+      </a>
+    </div>
+
+    <!-- Location Search -->
+    <div class="flex flex-col items-center space-y-4 mb-6">
+      <label for="geocoder" class="font-medium text-lg text-center">Search for your location:</label>
+      <div class="flex justify-center w-full">
+        <div id="geocoder" class="w-full max-w-md mx-auto"></div>
+      </div>      
+      <button id="check-button" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
+        Check Foraging Conditions
+      </button>
+    </div>
+   
+    <!-- Weather Info -->
+    <div id="weather-info" class="text-center mb-8 space-y-2 text-lg"></div>
+
+    <!-- Mushroom Info -->
+    <section id="mushroom-info" class="mt-6 hidden">
+      <h2 class="text-2xl font-semibold mb-4 text-center">Mushrooms that might be around to forage</h2>
+      <div id="mushroom-list" class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"></div>
+    </section>
+  </main>
+
+  <!-- Mapbox JS -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+
+  <script>
+    // Backend API URL
+    const API_BASE_URL = 'http://localhost:8000';
+
+    // Authentication state
+    let authToken = localStorage.getItem('token');
+    let currentUser = localStorage.getItem('username');
+
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!authToken || !currentUser) {
+        // Not logged in, redirect to login page
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      initializeApp();
+    });
+
+    // Initialize the application
+    async function initializeApp() {
+      // Set username display
+      document.getElementById('username-display').textContent = `Welcome, ${currentUser}!`;
+      
+      // Check user role for admin access
+      await checkUserRole();
+      
+      // Initialize geocoder
+      initializeGeocoder();
+    }
+
+    // Check user role for admin access
+    async function checkUserRole() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/user/profile`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          if (userData.role === 'admin') {
+            document.getElementById('admin-link').classList.remove('hidden');
+          }
+        } else if (response.status === 401) {
+          // Token expired, redirect to login
+          logout();
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+      }
+    }
+
+    // Logout functionality
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      window.location.href = 'index.html';
+    }
+
+    // Set up logout button
+    document.getElementById('logout-btn').addEventListener('click', logout);
+
+    // Mapbox setup
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic3RlcGhhbm1heCIsImEiOiJjbWFndmpiNnYwNGpwMmlzN3Yya3MzeWs3In0.yctGCmSo5bj4Lkeg9OtPbA';
+    let selectedCoordinates = null;
+    let geocoder;
+
+    // Initialize geocoder
+    function initializeGeocoder() {
+      geocoder = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        placeholder: 'Enter your location',
+        mapboxgl: mapboxgl,
+        marker: false,
+        countries: 'ZA' // Restrict search to South Africa
+      });
+
+      geocoder.addTo('#geocoder');
+
+      geocoder.on('result', function (e) {
+        selectedCoordinates = e.result.center;
+      });
+
+      document.getElementById("check-button").addEventListener("click", checkWeather);
+    }
+
+    // Weather checking function (your original functionality)
+    async function checkWeather() {
+      if (!selectedCoordinates) {
+        alert("Please select a location first.");
+        return;
+      }
+
+      const [lon, lat] = selectedCoordinates;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/check?lat=${lat}&lon=${lon}`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (response.status === 401) {
+          alert('Your session has expired. Please sign in again.');
+          logout();
+          return;
+        }
+
+        const data = await response.json();
+
+        const weatherInfo = document.getElementById("weather-info");
+
+        let colorClass = '';
+        if (data.foraging_quality && data.foraging_quality.includes("Perfect")) {
+          colorClass = 'text-yellow-600 font-bold';
+        } else if (data.foraging_quality && data.foraging_quality.includes("Good")) {
+          colorClass = 'text-green-700 font-semibold';
+        } else if (data.foraging_quality && data.foraging_quality.includes("Average")) {
+          colorClass = 'text-yellow-700 font-medium';
+        } else {
+          colorClass = 'text-red-600 font-semibold';
+        }
+
+        weatherInfo.innerHTML = `
+        <div class="relative">
+          <!-- Main Weather Average Box -->
+          <div class="bg-gray-800 text-white rounded-lg p-4 shadow-md space-y-0">
+            <h2 class="text-xl font-semibold">7-day weather average (Historical)</h2>
+            <p><strong>🌡 Temperature:</strong> ${data.avg_temperature || 'N/A'}°C</p>
+            <p><strong>💧 Humidity:</strong> ${data.avg_humidity || 'N/A'}%</p>
+            <p><strong>🌧 Rain (mm):</strong> ${data.avg_precipitation || 'N/A'} mm</p>
+            <p><strong>💨 Wind Speed:</strong> ${data.avg_wind_speed || 'N/A'} km/h</p>
+            <p><strong>🌱 Season:</strong> ${data.season || 'N/A'}</p>
+            <p class="${colorClass}">${data.foraging_quality || "Weather data retrieved"}</p>
+          </div>
+
+          <div id="forecast-box" class="absolute top-2 left-2 w-44 h-36 bg-gray-700 p-3 rounded-xl shadow-md text-white text-sm font-semibold cursor-pointer transition-all duration-300" onclick="toggleForecast()">
+            <h3 class="text-base font-semibold mb-0.5 flex items-center justify-between">
+                Today's Forecast 
+                <span id="toggle-icon" class="text-xs">−</span>
+            </h3>
+            <div id="forecast-content">
+                <p class="mb-0">🌡  ${data.forecast_temperature || 'N/A'}°C</p>
+                <p class="mb-1">💧  ${data.forecast_humidity || 'N/A'}%</p>
+                <p class="mb-1">🌧  ${data.forecast_precipitation || 'N/A'} mm</p>
+                <p>💨  ${data.forecast_wind_speed || 'N/A'} km/h</p>
+            </div>
+          </div>
+          <div id="forecast-mini" class="hidden absolute top-2 left-2 cursor-pointer text-3xl" onclick="toggleForecast()">
+              🌤️
+          </div>
+        </div>
+        `;
+
+        const mushroomSection = document.getElementById("mushroom-info");
+        const mushroomList = document.getElementById("mushroom-list");
+        mushroomList.innerHTML = '';
+        mushroomSection.classList.remove("hidden");
+
+        // Handle recommended mushrooms
+        const mushrooms = data.recommended_mushrooms || [];
+        
+        if (mushrooms.length === 0) {
+          mushroomList.innerHTML = '<p class="col-span-full text-center text-gray-700">No mushrooms are recommended for foraging today.</p>';
+          return;
+        }
+
+        mushrooms.forEach(mushroom => {
+          let imageUrl = '';
+          switch (mushroom.toLowerCase()) {
+            case 'porcini':
+              imageUrl = 'https://i.imgur.com/lanIBpa.jpg';
+              break;
+            case 'poplar_boletes':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Leccinum_duriusculum_254194.jpg/500px-Leccinum_duriusculum_254194.jpg';
+              break;
+            case 'pine_rings':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/8/89/Lactarius_deliciosus.jpg';
+              break;
+            case 'agaricus':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/2012-07-09_Agaricus_subfloccosus_235732_crop.jpg/1920px-2012-07-09_Agaricus_subfloccosus_235732_crop.jpg';
+              break;
+            case 'white_parasols':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/9/93/Macrolepiota_zeyheri.jpg';
+              break;
+            case 'wood_blewits':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Clitocybe_nuda_%28Fr.%29_H.E._Bigelow_%26_A.H._Sm_267650.jpg/2560px-Clitocybe_nuda_%28Fr.%29_H.E._Bigelow_%26_A.H._Sm_267650.jpg';
+              break;
+            case 'morels':
+              imageUrl = 'https://imgur.com/gcqw8Kk.jpeg';
+              break;
+            case 'blushers':
+              imageUrl = 'https://i.imgur.com/n6OOn4o.jpg';
+              break;
+            case 'slippery_jills':
+              imageUrl = 'https://i.imgur.com/TNFYxoo.jpg';
+              break;
+            case 'weeping_bolete':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/K%C3%B6rnchen-R%C3%B6hrling_Suillus_granulatus_1.jpg/1920px-K%C3%B6rnchen-R%C3%B6hrling_Suillus_granulatus_1.jpg';
+              break;
+            case 'bovine_bolete':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/6/62/Suillus_bovinus_2011_10_07.jpg';
+              break;
+            case 'chicken_of_the_woods':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Laetiporus_sulphureus_JPG7.jpg/800px-Laetiporus_sulphureus_JPG7.jpg';
+              break;
+            case 'termitomyces':
+              imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/5/57/Termitomyces_sp.jpg';
+              break;
+            default:
+              imageUrl = 'https://imgur.com/ZuSrjWH.jpg'; // Fallback image
+              break;
+          }
+
+          const mushroomCard = document.createElement("div");
+          mushroomCard.className = "bg-white bg-opacity-90 rounded-lg shadow-md p-4 text-center hover:shadow-xl transition";
+
+          const img = document.createElement("img");
+          img.src = imageUrl;
+          img.alt = mushroom;
+          img.className = "w-full h-40 object-cover rounded-md mb-2";
+
+          const name = document.createElement("h3");
+          name.textContent = mushroom.charAt(0).toUpperCase() + mushroom.slice(1).replace(/_/g, ' ');
+          name.className = "text-lg font-semibold";
+
+          mushroomCard.appendChild(img);
+          mushroomCard.appendChild(name);
+          mushroomList.appendChild(mushroomCard);
+        });
+      } catch (error) {
+        console.error('Error fetching weather data:', error);
+        alert('Error fetching weather data. Please try again.');
+      }
+    }
+
+    function toggleForecast() {
+      const forecastBox = document.getElementById('forecast-box');
+      const forecastMini = document.getElementById('forecast-mini');
+      
+      if (forecastBox.classList.contains('hidden')) {
+        forecastBox.classList.remove('hidden');
+        forecastMini.classList.add('hidden');
+      } else {
+        forecastBox.classList.add('hidden');
+        forecastMini.classList.remove('hidden');
+      }
+    }
+  </script>
+
+</body>
+</html>
