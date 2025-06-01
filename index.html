@@ -1,243 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mushroom Foraging</title>
-
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
-
-  <!-- Mapbox CSS -->
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
-  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet" />
-
-  <style>
-    body {
-      background-image: url('https://imgur.com/ItlvR8p.jpeg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-
-    .mapboxgl-ctrl-geocoder {
-  width: 100% !important;
-  margin: 0 auto !important;
-  max-width: 100% !important;
-  display: flex !important;
-  justify-content: center;
-}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forager's Friend - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('https://imgur.com/ItlvR8p.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .forest-overlay {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+        }
+        .auth-modal {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
+<body class="min-h-screen">
+    <div class="forest-overlay min-h-screen flex items-center justify-center">
+        <!-- Authentication Modal -->
+        <div class="auth-modal max-w-md w-full mx-4 rounded-lg shadow-2xl p-8">
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <img 
+                    src="https://imgur.com/ZuSrjWH.jpg"  
+                    alt="Forager's Friend Logo"
+                    class="h-32 mx-auto object-contain mb-4"
+                />
+                <h1 class="text-3xl font-bold text-gray-800">Forager's Friend</h1>
+                <p class="text-gray-600">Mushroom foraging guide and condition checker</p>
+            </div>
 
-<body class="font-sans text-gray-800 min-h-screen bg-cover bg-center">
+            <!-- Tab Navigation -->
+            <div class="flex mb-6 bg-gray-100 rounded-lg p-1">
+                <button id="loginTab" class="flex-1 py-2 px-4 rounded-md bg-green-600 text-white font-medium transition" onclick="showLogin()">
+                    Login
+                </button>
+                <button id="signupTab" class="flex-1 py-2 px-4 rounded-md text-gray-600 font-medium transition" onclick="showSignup()">
+                    Sign Up
+                </button>
+            </div>
 
-  <header class="bg-green-600 bg-opacity-90 pt-0 pb-2 shadow-md w-full flex justify-center">
-    <div class="w-full max-w-4xl px-4 text-center pt-0">
-      <img 
-        src="https://imgur.com/ZuSrjWH.jpg"  
-        alt="Forager’s Friend Logo"
-        class="h-48 mx-auto object-contain -mt-4"
-      />
-      <p class="text-white font-semibold text-lg -mt-4">
-        Mushroom foraging guide and condition checker
-      </p>
+            <!-- Login Form -->
+            <div id="loginForm">
+                <form id="loginFormElement" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text" id="loginUsername" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="loginPassword" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition font-medium">
+                        Login
+                    </button>
+                </form>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" class="hidden">
+                <form id="signupFormElement" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text" id="signupUsername" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="signupEmail" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name (Optional)</label>
+                        <input type="text" id="signupFullName" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="signupPassword" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition font-medium">
+                        Sign Up
+                    </button>
+                </form>
+            </div>
+
+            <!-- Demo Account Info -->
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-medium text-blue-800 mb-2">Demo Account</h3>
+                <p class="text-sm text-blue-600">
+                    <strong>Username:</strong> admin<br>
+                    <strong>Password:</strong> admin123
+                </p>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="successMessage" class="hidden fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            <span id="successText"></span>
+        </div>
+        
+        <div id="errorMessage" class="hidden fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            <span id="errorText"></span>
+        </div>
     </div>
-  </header>
-  
-  <main class="max-w-5xl mx-auto px-4 py-8 bg-white bg-opacity-80 rounded-lg mt-8 shadow-lg">
-    <div class="text-right -mt-4">
-    </div>
 
-    <!-- Location Search -->
-    <div class="flex flex-col items-center space-y-4 mb-6">
-      <label for="geocoder" class="font-medium text-lg text-center">Search for your location:</label>
-      <div class="flex justify-center w-full">
-        <div id="geocoder" class="w-full max-w-md mx-auto"></div>
-      </div>      
-      <button id="check-button" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
-        Check Foraging Conditions
-      </button>
-    </div>
-   
+    <script>
+        // API Configuration - Update this with your actual Render backend URL
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000'
+            : 'https://mushroom-backend-frwl.onrender.com';  // Your current backend URL
 
-    <!-- Weather Info -->
-    <div id="weather-info" class="text-center mb-8 space-y-2 text-lg"></div>
-
-    <!-- Mushroom Info -->
-    <section id="mushroom-info" class="mt-6 hidden">
-      <h2 class="text-2xl font-semibold mb-4 text-center">Mushrooms that might be around to forage</h2>
-      <div id="mushroom-list" class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"></div>
-    </section>
-  </main>
-
-  <!-- Mapbox JS -->
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
-  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-
-  <script>
-    mapboxgl.accessToken = 'pk.eyJ1Ijoic3RlcGhhbm1heCIsImEiOiJjbWFndmpiNnYwNGpwMmlzN3Yya3MzeWs3In0.yctGCmSo5bj4Lkeg9OtPbA';  // Replace with your actual Mapbox token
-
-    let selectedCoordinates = null;
-
-    const geocoder = new MapboxGeocoder({
-      accessToken: mapboxgl.accessToken,
-      placeholder: 'Enter your location',
-      mapboxgl: mapboxgl,
-      marker: false,
-      countries: 'ZA' // Restrict search to South Africa
-    });
-
-    geocoder.addTo('#geocoder');
-
-    geocoder.on('result', function (e) {
-      selectedCoordinates = e.result.center;
-    });
-
-    document.getElementById("check-button").addEventListener("click", checkWeather);
-
-    async function checkWeather() {
-      if (!selectedCoordinates) {
-        alert("Please select a location first.");
-        return;
-      }
-
-      const [lon, lat] = selectedCoordinates;
-
-      const response = await fetch(`https://mushroom-backend-frwl.onrender.com/check?lat=${lat}&lon=${lon}`);
-      const data = await response.json();
-
-      const weatherInfo = document.getElementById("weather-info");
-
-      let colorClass = '';
-      if (data.foraging_quality.includes("Perfect")) {
-        colorClass = 'text-yellow-600 font-bold';
-      } else if (data.foraging_quality.includes("Good")) {
-        colorClass = 'text-green-700 font-semibold';
-      } else if (data.foraging_quality.includes("Average")) {
-        colorClass = 'text-yellow-700 font-medium';
-      } else {
-        colorClass = 'text-red-600 font-semibold';
-      }
-
-      weatherInfo.innerHTML = `
-      <div class="relative">
-  <!-- Main Weather Average Box (unchanged) -->
-  <div class="bg-gray-800 text-white rounded-lg p-4 shadow-md space-y-0">
-    <h2 class="text-xl font-semibold">7-day weather average (Historical)</h2>
-    <p><strong>🌡 Temperature:</strong> ${data.avg_temperature}°C</p>
-    <p><strong>💧 Humidity:</strong> ${data.avg_humidity}%</p>
-    <p><strong>🌧 Rain (mm):</strong> ${data.avg_precipitation} mm</p>
-    <p><strong>💨 Wind Speed:</strong> ${data.avg_wind_speed} km/h</p>
-    <p><strong>🌱 Season:</strong> ${data.season}</p>
-    <p class="${colorClass}">${data.foraging_quality || ""}</p>
-  </div>
-
-  <div id="forecast-box" class="absolute top-2 left-2 w-44 h-36 bg-gray-700 p-3 rounded-xl shadow-md text-white text-sm font-semibold cursor-pointer transition-all duration-300" onclick="toggleForecast()">
-    <h3 class="text-base font-semibold mb-0.5 flex items-center justify-between">
-        Today's Forecast 
-        <span id="toggle-icon" class="text-xs">−</span>
-    </h3>
-    <div id="forecast-content">
-        <p class="mb-0">🌡  ${data.forecast_temperature}°C</p>
-        <p class="mb-1">💧  ${data.forecast_humidity}%</p>
-        <p class="mb-1">🌧  ${data.forecast_precipitation} mm</p>
-        <p>💨  ${data.forecast_wind_speed} km/h</p>
-    </div>
-</div>
-<div id="forecast-mini" class="hidden absolute top-2 left-2 cursor-pointer text-3xl" onclick="toggleForecast()">
-    🌤️
-</div>
-
-      `;
-
-      const mushroomSection = document.getElementById("mushroom-info");
-      const mushroomList = document.getElementById("mushroom-list");
-      mushroomList.innerHTML = '';
-      mushroomSection.classList.remove("hidden");
-
-      if (data.recommended_mushrooms.length === 0) {
-        mushroomList.innerHTML = '<p class="col-span-full text-center text-gray-700">No mushrooms are recommended for foraging today.</p>';
-        return;
-      }
-
-      data.recommended_mushrooms.forEach(mushroom => {
-        let imageUrl = '';
-        switch (mushroom.toLowerCase()) {
-          case 'porcini':
-            imageUrl = 'https://i.imgur.com/lanIBpa.jpg';
-            break;
-          case 'poplar_boletes':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Leccinum_duriusculum_254194.jpg/500px-Leccinum_duriusculum_254194.jpg';
-            break;
-          case 'pine_rings':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/8/89/Lactarius_deliciosus.jpg';
-            break;
-          case 'agaricus':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/2012-07-09_Agaricus_subfloccosus_235732_crop.jpg/1920px-2012-07-09_Agaricus_subfloccosus_235732_crop.jpg';
-            break;
-          case 'white_parasols':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/9/93/Macrolepiota_zeyheri.jpg';
-            break;
-          case 'wood_blewits':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Clitocybe_nuda_%28Fr.%29_H.E._Bigelow_%26_A.H._Sm_267650.jpg/2560px-Clitocybe_nuda_%28Fr.%29_H.E._Bigelow_%26_A.H._Sm_267650.jpg';
-            break;
-          case 'morels':
-            imageUrl = 'https://imgur.com/gcqw8Kk.jpeg';
-            break;
-          case 'blushers':
-            imageUrl = 'https://i.imgur.com/n6OOn4o.jpg';
-            break;
-          case 'slippery_jills':
-            imageUrl = 'https://i.imgur.com/TNFYxoo.jpg';
-            break;
-          case 'weeping_bolete':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/K%C3%B6rnchen-R%C3%B6hrling_Suillus_granulatus_1.jpg/1920px-K%C3%B6rnchen-R%C3%B6hrling_Suillus_granulatus_1.jpg';
-            break;
-          case 'bovine_bolete':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/6/62/Suillus_bovinus_2011_10_07.jpg';
-            break;
-          case 'chicken_of_the_woods':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Laetiporus_sulphureus_JPG7.jpg/800px-Laetiporus_sulphureus_JPG7.jpg';
-            break;
-          case 'termitomyces':
-            imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/5/57/Termitomyces_sp.jpg';
-            break;
+        // Tab switching
+        function showLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('loginTab').classList.add('bg-green-600', 'text-white');
+            document.getElementById('loginTab').classList.remove('text-gray-600');
+            document.getElementById('signupTab').classList.remove('bg-green-600', 'text-white');
+            document.getElementById('signupTab').classList.add('text-gray-600');
         }
 
-        const mushroomCard = document.createElement("div");
-        mushroomCard.className = "bg-white bg-opacity-90 rounded-lg shadow-md p-4 text-center hover:shadow-xl transition";
+        function showSignup() {
+            document.getElementById('signupForm').classList.remove('hidden');
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupTab').classList.add('bg-green-600', 'text-white');
+            document.getElementById('signupTab').classList.remove('text-gray-600');
+            document.getElementById('loginTab').classList.remove('bg-green-600', 'text-white');
+            document.getElementById('loginTab').classList.add('text-gray-600');
+        }
 
-        const img = document.createElement("img");
-        img.src = imageUrl;
-        img.alt = mushroom;
-        img.className = "w-full h-40 object-cover rounded-md mb-2";
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            
+            if (token && username) {
+                // User is already logged in, redirect to homepage
+                window.location.href = 'homepage.html';
+            }
 
-        const name = document.createElement("h3");
-        name.textContent = mushroom.charAt(0).toUpperCase() + mushroom.slice(1).replace(/_/g, ' ');
-        name.className = "text-lg font-semibold";
+            // Form event listeners
+            document.getElementById('loginFormElement').addEventListener('submit', handleLogin);
+            document.getElementById('signupFormElement').addEventListener('submit', handleSignup);
+        });
 
-        mushroomCard.appendChild(img);
-        mushroomCard.appendChild(name);
-        mushroomList.appendChild(mushroomCard);
-      });
-    }
+        // Handle login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
 
-    function toggleForecast() {
-    const forecastBox = document.getElementById('forecast-box');
-    const forecastMini = document.getElementById('forecast-mini');
-    
-    if (forecastBox.classList.contains('hidden')) {
-        // Expand - show full box, hide emoji
-        forecastBox.classList.remove('hidden');
-        forecastMini.classList.add('hidden');
-    } else {
-        // Minimize - hide full box, show emoji only
-        forecastBox.classList.add('hidden');
-        forecastMini.classList.remove('hidden');
-    }
-}
-  </script>
+            try {
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
 
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('username', data.username);
+                    
+                    showSuccess('Login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = 'homepage.html';
+                    }, 1000);
+                } else {
+                    showError(data.detail || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Network error. Please try again.');
+            }
+        }
+
+        // Handle signup
+        async function handleSignup(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('signupUsername').value;
+            const email = document.getElementById('signupEmail').value;
+            const fullName = document.getElementById('signupFullName').value;
+            const password = document.getElementById('signupPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        full_name: fullName || null,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('username', data.username);
+                    
+                    showSuccess('Account created successfully! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = 'homepage.html';
+                    }, 1000);
+                } else {
+                    showError(data.detail || 'Signup failed');
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                showError('Network error. Please try again.');
+            }
+        }
+
+        // Utility functions
+        function showSuccess(message) {
+            document.getElementById('successText').textContent = message;
+            document.getElementById('successMessage').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('successMessage').classList.add('hidden');
+            }, 5000);
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('errorMessage').classList.add('hidden');
+            }, 5000);
+        }
+    </script>
 </body>
 </html>
