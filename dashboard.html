@@ -685,20 +685,20 @@
       
       const formData = new FormData();
       
-      // Add form fields
+      // Add form fields - matching backend expectations
       formData.append('date', document.getElementById('journal-date').value);
       formData.append('location', document.getElementById('journal-location').value);
+      formData.append('species_found', document.getElementById('species-found').value || '');
+      formData.append('quantity', ''); // Backend expects this field
+      formData.append('weather_conditions', ''); // Backend expects this field  
       formData.append('temperature', document.getElementById('temperature').value || '');
       formData.append('humidity', document.getElementById('humidity').value || '');
-      formData.append('rainfall', document.getElementById('rainfall').value || '');
-      formData.append('wind_speed', document.getElementById('wind-speed').value || '');
-      formData.append('species_found', document.getElementById('species-found').value || '');
       formData.append('notes', document.getElementById('journal-text').value);
       
-      // Add images
+      // Add single image (backend expects 'photo', not 'images')
       const images = document.getElementById('journal-images').files;
-      for (let i = 0; i < images.length; i++) {
-        formData.append('photo', images[i]);
+      if (images.length > 0) {
+        formData.append('photo', images[0]); // Only send first image
       }
 
       try {
