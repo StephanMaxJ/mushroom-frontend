@@ -683,22 +683,38 @@
     document.getElementById('journal-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      // Debug: Check required fields first
+      const date = document.getElementById('journal-date').value;
+      const location = document.getElementById('journal-location').value;
+      const journalText = document.getElementById('journal-text').value;
+      
+      if (!date || !location || !journalText) {
+        showMessage('Please fill in Date, Location, and Journal Entry fields', 'error');
+        return;
+      }
+      
       const formData = new FormData();
       
-      // Add form fields - matching backend expectations
-      formData.append('date', document.getElementById('journal-date').value);
-      formData.append('location', document.getElementById('journal-location').value);
+      // Add form fields - exactly matching backend expectations
+      formData.append('date', date);
+      formData.append('location', location);
       formData.append('species_found', document.getElementById('species-found').value || '');
       formData.append('quantity', ''); // Backend expects this field
       formData.append('weather_conditions', ''); // Backend expects this field  
       formData.append('temperature', document.getElementById('temperature').value || '');
       formData.append('humidity', document.getElementById('humidity').value || '');
-      formData.append('notes', document.getElementById('journal-text').value);
+      formData.append('notes', journalText);
       
       // Add single image (backend expects 'photo', not 'images')
       const images = document.getElementById('journal-images').files;
       if (images.length > 0) {
         formData.append('photo', images[0]); // Only send first image
+      }
+
+      // Debug: Log what we're sending
+      console.log('Sending journal entry with:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
 
       try {
@@ -719,8 +735,16 @@
           // Switch to entries tab to show the new entry
           switchTab('entries');
         } else {
-          const error = await response.json();
-          showMessage(error.detail || 'Failed to save journal entry', 'error');
+          // Debug: Get the actual error response
+          const errorText = await response.text();
+          console.error('Backend error response:', errorText);
+          
+          try {
+            const error = JSON.parse(errorText);
+            showMessage(error.detail || `Failed to save journal entry (${response.status})`, 'error');
+          } catch {
+            showMessage(`Failed to save journal entry (${response.status}): ${errorText}`, 'error');
+          }
         }
       } catch (error) {
         console.error('Error saving journal entry:', error);
