@@ -434,7 +434,7 @@
     async function checkUserRole() {
       try {
         const token = storage.getItem('token');
-        const response = await fetch(`http://localhost:8000/user/profile`, {
+        const response = await fetch(`http://https://mushroom-backend-frwl.onrender.com/user/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
