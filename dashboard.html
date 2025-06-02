@@ -693,39 +693,56 @@
         return;
       }
       
-      const formData = new FormData();
-      
-      // Add form fields - exactly matching backend expectations
-      formData.append('date', date);
-      formData.append('location', location);
-      formData.append('species_found', document.getElementById('species-found').value || '');
-      formData.append('quantity', ''); // Backend expects this field
-      formData.append('weather_conditions', ''); // Backend expects this field  
-      formData.append('temperature', document.getElementById('temperature').value || '');
-      formData.append('humidity', document.getElementById('humidity').value || '');
-      formData.append('notes', journalText);
-      
-      // Add single image (backend expects 'photo', not 'images')
       const images = document.getElementById('journal-images').files;
-      if (images.length > 0) {
-        formData.append('photo', images[0]); // Only send first image
-      }
-
-      // Debug: Log what we're sending
-      console.log('Sending journal entry with:');
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
+      
       try {
         const token = storage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/journal/entries`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
-        });
+        let response;
+        
+        if (images.length > 0) {
+          // If there's an image, use FormData
+          const formData = new FormData();
+          formData.append('date', date);
+          formData.append('location', location);
+          formData.append('species_found', document.getElementById('species-found').value || '');
+          formData.append('quantity', '');
+          formData.append('weather_conditions', '');
+          formData.append('temperature', document.getElementById('temperature').value || '');
+          formData.append('humidity', document.getElementById('humidity').value || '');
+          formData.append('notes', journalText);
+          formData.append('photo', images[0]);
+          
+          response = await fetch(`${API_BASE_URL}/journal/entries`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+        } else {
+          // If no image, send JSON
+          const jsonData = {
+            date: date,
+            location: location,
+            species_found: document.getElementById('species-found').value || '',
+            quantity: '',
+            weather_conditions: '',
+            temperature: document.getElementById('temperature').value || '',
+            humidity: document.getElementById('humidity').value || '',
+            notes: journalText
+          };
+          
+          console.log('Sending JSON data:', jsonData);
+          
+          response = await fetch(`${API_BASE_URL}/journal/entries`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(jsonData)
+          });
+        }
 
         if (response.ok) {
           showMessage('Journal entry saved successfully!', 'success');
