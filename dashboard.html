@@ -442,8 +442,15 @@
 
         if (response.ok) {
           const userData = await response.json();
+          console.log('User data:', userData); // Debug: Check user role
+          console.log('User role:', userData.role); // Debug: Check specific role
+          
           if (userData.role === 'admin') {
+            console.log('Admin access granted - showing admin link'); // Debug
             document.getElementById('admin-link').classList.remove('hidden');
+          } else {
+            console.log('User is not admin - hiding admin link'); // Debug
+            document.getElementById('admin-link').classList.add('hidden');
           }
         }
       } catch (error) {
@@ -709,7 +716,7 @@
           formData.append('weather_conditions', '');
           formData.append('temperature', document.getElementById('temperature').value || '');
           formData.append('humidity', document.getElementById('humidity').value || '');
-          formData.append('notes', journalText);
+          formData.append('entry_text', journalText); // Changed from 'notes' to 'entry_text'
           formData.append('photo', images[0]);
           
           response = await fetch(`${API_BASE_URL}/journal/entries`, {
@@ -729,7 +736,7 @@
             weather_conditions: '',
             temperature: document.getElementById('temperature').value || '',
             humidity: document.getElementById('humidity').value || '',
-            notes: journalText
+            entry_text: journalText // Changed from 'notes' to 'entry_text'
           };
           
           console.log('Sending JSON data:', jsonData);
