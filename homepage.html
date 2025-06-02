@@ -27,6 +27,74 @@
       display: flex !important;
       justify-content: center;
     }
+
+    /* Premium Modal Styles */
+    .premium-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+    }
+
+    .premium-modal.show {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .premium-content {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 500px;
+      margin: 1rem;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .locked-button {
+      position: relative;
+      opacity: 0.7;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .locked-button:hover {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+
+    .lock-icon {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -59,9 +127,11 @@
   
   <main class="max-w-5xl mx-auto px-4 py-8 bg-white bg-opacity-80 rounded-lg mt-8 shadow-lg">
     <div class="text-right -mt-4 mb-6">
-      <a href="glossary.html" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition">
+      <!-- Locked Mushroom Guide Button -->
+      <div class="locked-button bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition inline-block" onclick="showPremiumModal()">
         🍄‍🟫 Mushroom Guide
-      </a>
+        <div class="lock-icon">🔒</div>
+      </div>
     </div>
 
     <!-- Location Search -->
@@ -84,6 +154,42 @@
       <div id="mushroom-list" class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"></div>
     </section>
   </main>
+
+  <!-- Premium Feature Modal -->
+  <div id="premium-modal" class="premium-modal">
+    <div class="premium-content text-center">
+      <div class="text-6xl mb-4">🍄💎</div>
+      <h2 class="text-2xl font-bold text-white mb-4">Premium Mushroom Guides</h2>
+      <p class="text-white mb-6 leading-relaxed">
+        Unlock comprehensive field guides for safe mushroom identification! 
+        Get detailed information about species, habitats, safety tips, and more.
+      </p>
+      
+      <div class="bg-white bg-opacity-20 rounded-lg p-4 mb-6">
+        <h3 class="font-semibold text-white mb-2">🌟 Premium Features Include:</h3>
+        <ul class="text-white text-sm space-y-1">
+          <li>✅ Detailed species identification guides</li>
+          <li>✅ Safety warnings and lookalike information</li>
+          <li>✅ Habitat and seasonal guidance</li>
+          <li>✅ High-quality photos and descriptions</li>
+          <li>✅ Foraging tips from experts</li>
+        </ul>
+      </div>
+      
+      <div class="space-y-3">
+        <button class="w-full bg-white text-yellow-600 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 transition">
+          🚀 Upgrade to Premium - Coming Soon!
+        </button>
+        <button onclick="closePremiumModal()" class="w-full bg-transparent border-2 border-white text-white font-semibold py-2 px-6 rounded-lg hover:bg-white hover:text-yellow-600 transition">
+          Continue with Free Version
+        </button>
+      </div>
+      
+      <p class="text-white text-xs mt-4 opacity-75">
+        Premium subscriptions will be available soon. Stay tuned!
+      </p>
+    </div>
+  </div>
 
   <!-- Mapbox JS -->
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
@@ -142,6 +248,31 @@
         console.error('Error checking user role:', error);
       }
     }
+
+    // Premium Modal Functions
+    function showPremiumModal() {
+      document.getElementById('premium-modal').classList.add('show');
+      document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+
+    function closePremiumModal() {
+      document.getElementById('premium-modal').classList.remove('show');
+      document.body.style.overflow = 'auto'; // Re-enable scrolling
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('premium-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closePremiumModal();
+      }
+    });
+
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closePremiumModal();
+      }
+    });
 
     // Logout functionality
     function logout() {
