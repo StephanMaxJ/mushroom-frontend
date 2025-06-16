@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum - Forager's Friend</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('https://imgur.com/ItlvR8p.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .post-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .category-badge {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="glass-effect border-b">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="https://imgur.com/ZuSrjWH.jpg" alt="Logo" class="w-8 h-8 rounded-full">
+                <h1 class="text-xl font-bold text-white">Forager's Forum</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="homepage.html" class="text-white hover:text-green-300 transition">Home</a>
+                <a href="chat.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition">Live Chat</a>
+                <a href="dashboard.html" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">Dashboard</a>
+                <span id="username-display" class="text-white text-sm"></span>
+                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Forum Categories -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="post-card p-6 card-hover cursor-pointer" onclick="filterPosts('general')">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white">
+                        💬
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">General Discussion</h3>
+                        <p class="text-sm text-gray-600" id="general-count">0 posts</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-card p-6 card-hover cursor-pointer" onclick="filterPosts('identification')">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-white">
+                        🔍
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Mushroom ID</h3>
+                        <p class="text-sm text-gray-600" id="identification-count">0 posts</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-card p-6 card-hover cursor-pointer" onclick="filterPosts('locations')">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                        📍
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Foraging Spots</h3>
+                        <p class="text-sm text-gray-600" id="locations-count">0 posts</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-card p-6 card-hover cursor-pointer" onclick="filterPosts('recipes')">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white">
+                        🍳
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Recipes & Cooking</h3>
+                        <p class="text-sm text-gray-600" id="recipes-count">0 posts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="glass-effect rounded-lg p-4 mb-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <h2 class="text-white text-lg font-semibold">Forum Posts</h2>
+                    <select id="category-filter" onchange="filterPosts(this.value)" class="px-3 py-1 rounded-lg bg-white/20 text-white border border-white/30">
+                        <option value="all">All Categories</option>
+                        <option value="general">General Discussion</option>
+                        <option value="identification">Mushroom ID</option>
+                        <option value="locations">Foraging Spots</option>
+                        <option value="recipes">Recipes & Cooking</option>
+                    </select>
+                </div>
+                <button onclick="openNewPostModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition">
+                    + New Post
+                </button>
+            </div>
+        </div>
+
+        <!-- Posts Container -->
+        <div id="posts-container" class="space-y-4">
+            <!-- Posts will be loaded here -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-posts" class="text-center py-8 hidden">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <p class="mt-2 text-white">Loading posts...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-posts" class="text-center py-12 hidden">
+            <div class="text-6xl mb-4">💬</div>
+            <h3 class="text-xl font-semibold text-white mb-2">No Posts Yet</h3>
+            <p class="text-gray-300">Be the first to start a discussion!</p>
+            <button onclick="openNewPostModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg mt-4 transition">
+                Create First Post
+            </button>
+        </div>
+    </div>
+
+    <!-- New Post Modal -->
+    <div id="new-post-modal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Create New Post</h3>
+                    <button onclick="closeNewPostModal()" class="text-gray-500 hover:text-gray-700">
+                        <span class="sr-only">Close</span>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="new-post-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select id="post-category" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Select a category</option>
+                            <option value="general">General Discussion</option>
+                            <option value="identification">Mushroom ID</option>
+                            <option value="locations">Foraging Spots</option>
+                            <option value="recipes">Recipes & Cooking</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                        <input type="text" id="post-title" required maxlength="200" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Enter post title...">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                        <textarea id="post-content" required rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Share your thoughts, questions, or experiences..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Add Photos (Optional)</label>
+                        <input type="file" id="post-images" multiple accept="image/*" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <p class="text-sm text-gray-500 mt-1">You can upload multiple images</p>
+                    </div>
+
+                    <div class="flex space-x-4 pt-4">
+                        <button type="submit" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition">
+                            Post to Forum
+                        </button>
+                        <button type="button" onclick="closeNewPostModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Details Modal -->
+    <div id="post-details-modal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Post Details</h3>
+                    <button onclick="closePostDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                        <span class="sr-only">Close</span>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="post-details-content">
+                    <!-- Post details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://mushroom-backend-frwl.onrender.com';
+        let allPosts = [];
+        let currentUser = null;
+
+        // Authentication helper
+        function getAuthHeaders() {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadPosts();
+        });
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE_URL}/user/profile`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('Authentication failed');
+                }
+
+                currentUser = await response.json();
+                document.getElementById('username-display').textContent = currentUser.username;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Load forum posts (mock data for now)
+        function loadPosts() {
+            document.getElementById('loading-posts').classList.remove('hidden');
+            
+            // Mock data - replace with actual API call later
+            setTimeout(() => {
+                allPosts = [
+                    {
+                        id: 1,
+                        title: "Found some interesting mushrooms today!",
+                        content: "I discovered these near the old oak trees in Newlands Forest. Can anyone help identify them?",
+                        category: "identification",
+                        author: "ForagerMike",
+                        created_at: new Date().toISOString(),
+                        replies: 5,
+                        images: ["https://via.placeholder.com/300x200?text=Mushroom+Photo"]
+                    },
+                    {
+                        id: 2,
+                        title: "Best spots for porcini this season?",
+                        content: "Looking for recommendations on good porcini hunting locations around Cape Town. Any tips?",
+                        category: "locations",
+                        author: "MushroomHunter",
+                        created_at: new Date(Date.now() - 86400000).toISOString(),
+                        replies: 12,
+                        images: []
+                    },
+                    {
+                        id: 3,
+                        title: "Porcini risotto recipe",
+                        content: "Here's my family recipe for the most amazing porcini risotto. It's been passed down for generations!",
+                        category: "recipes",
+                        author: "ChefSarah",
+                        created_at: new Date(Date.now() - 172800000).toISOString(),
+                        replies: 8,
+                        images: ["https://via.placeholder.com/300x200?text=Risotto+Photo"]
+                    }
+                ];
+                
+                displayPosts(allPosts);
+                updateCategoryCounts();
+                document.getElementById('loading-posts').classList.add('hidden');
+            }, 1000);
+        }
+
+        // Display posts
+        function displayPosts(posts) {
+            const container = document.getElementById('posts-container');
+            const emptyState = document.getElementById('empty-posts');
+            
+            if (posts.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            container.innerHTML = posts.map(post => `
+                <div class="post-card p-6 card-hover cursor-pointer" onclick="viewPost(${post.id})">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="category-badge text-white px-3 py-1 rounded-full text-sm font-medium">
+                                    ${getCategoryIcon(post.category)} ${getCategoryName(post.category)}
+                                </span>
+                                <span class="text-gray-500 text-sm">•</span>
+                                <span class="text-gray-500 text-sm">${timeAgo(post.created_at)}</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">${post.title}</h3>
+                            <p class="text-gray-600 mb-3">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
+                            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                <span>👤 ${post.author}</span>
+                                <span>💬 ${post.replies} replies</span>
+                                ${post.images.length > 0 ? `<span>📷 ${post.images.length} photos</span>` : ''}
+                            </div>
+                        </div>
+                        ${post.images.length > 0 ? `
+                            <div class="ml-4">
+                                <img src="${post.images[0]}" alt="Post image" class="w-20 h-20 object-cover rounded-lg">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter posts by category
+        function filterPosts(category) {
+            const filteredPosts = category === 'all' ? allPosts : allPosts.filter(post => post.category === category);
+            displayPosts(filteredPosts);
+            
+            // Update filter dropdown
+            document.getElementById('category-filter').value = category;
+        }
+
+        // Update category counts
+        function updateCategoryCounts() {
+            const counts = {
+                general: allPosts.filter(p => p.category === 'general').length,
+                identification: allPosts.filter(p => p.category === 'identification').length,
+                locations: allPosts.filter(p => p.category === 'locations').length,
+                recipes: allPosts.filter(p => p.category === 'recipes').length
+            };
+            
+            Object.keys(counts).forEach(category => {
+                const element = document.getElementById(`${category}-count`);
+                if (element) {
+                    element.textContent = `${counts[category]} posts`;
+                }
+            });
+        }
+
+        // Helper functions
+        function getCategoryName(category) {
+            const names = {
+                general: 'General Discussion',
+                identification: 'Mushroom ID',
+                locations: 'Foraging Spots',
+                recipes: 'Recipes & Cooking'
+            };
+            return names[category] || category;
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                general: '💬',
+                identification: '🔍',
+                locations: '📍',
+                recipes: '🍳'
+            };
+            return icons[category] || '💬';
+        }
+
+        function timeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            return `${Math.floor(diffInSeconds / 86400)}d ago`;
+        }
+
+        // Modal functions
+        function openNewPostModal() {
+            document.getElementById('new-post-modal').classList.add('show');
+        }
+
+        function closeNewPostModal() {
+            document.getElementById('new-post-modal').classList.remove('show');
+            document.getElementById('new-post-form').reset();
+        }
+
+        function viewPost(postId) {
+            const post = allPosts.find(p => p.id === postId);
+            if (!post) return;
+            
+            document.getElementById('post-details-content').innerHTML = `
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-4">
+                            <span class="category-badge text-white px-3 py-1 rounded-full text-sm font-medium">
+                                ${getCategoryIcon(post.category)} ${getCategoryName(post.category)}
+                            </span>
+                            <span class="text-gray-500 text-sm">•</span>
+                            <span class="text-gray-500 text-sm">${timeAgo(post.created_at)}</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">${post.title}</h2>
+                        <div class="flex items-center space-x-2 mb-4 text-gray-600">
+                            <span>👤 ${post.author}</span>
+                            <span>•</span>
+                            <span>💬 ${post.replies} replies</span>
+                        </div>
+                    </div>
+                    
+                    <div class="prose max-w-none">
+                        <p class="text-gray-700 leading-relaxed">${post.content}</p>
+                    </div>
+                    
+                    ${post.images.length > 0 ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-3">Photos:</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${post.images.map(img => `
+                                    <img src="${img}" alt="Post image" class="w-full h-64 object-cover rounded-lg">
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="border-t pt-6">
+                        <h4 class="font-semibold text-gray-800 mb-4">Replies (${post.replies})</h4>
+                        <p class="text-gray-500 text-center py-8">Reply system coming soon!</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('post-details-modal').classList.add('show');
+        }
+
+        function closePostDetailsModal() {
+            document.getElementById('post-details-modal').classList.remove('show');
+        }
+
+        // Handle new post form submission
+        document.getElementById('new-post-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // For now, just show a success message
+            alert('Post created successfully! (This will be connected to the backend soon)');
+            closeNewPostModal();
+        });
+
+        // Close modals when clicking outside
+        document.getElementById('new-post-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeNewPostModal();
+        });
+
+        document.getElementById('post-details-modal').addEventListener('click', function(e) {
+            if (e.target === this) closePostDetailsModal();
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('username');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
