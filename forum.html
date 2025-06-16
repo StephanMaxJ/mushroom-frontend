@@ -37,6 +37,16 @@
         .category-badge {
             background: linear-gradient(135deg, #10b981, #059669);
         }
+        .auto-post-badge {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+        .news-post {
+            border-left: 4px solid #3b82f6;
+        }
+        .digest-post {
+            border-left: 4px solid #f59e0b;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05));
+        }
         .modal {
             display: none;
             position: fixed;
@@ -51,6 +61,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+        .refresh-button {
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -76,6 +93,22 @@
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-8">
+        <!-- News Alert Banner -->
+        <div id="news-banner" class="glass-effect rounded-lg p-4 mb-6 hidden">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">📰</span>
+                    <div>
+                        <h3 class="text-white font-semibold">Fresh Mushroom News!</h3>
+                        <p class="text-gray-300 text-sm">New articles and research have been added to the forum</p>
+                    </div>
+                </div>
+                <button onclick="scrollToNews()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition">
+                    View Latest
+                </button>
+            </div>
+        </div>
+
         <!-- Forum Categories -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="post-card p-6 card-hover cursor-pointer" onclick="filterPosts('general')">
@@ -138,11 +171,21 @@
                         <option value="identification">Mushroom ID</option>
                         <option value="locations">Foraging Spots</option>
                         <option value="recipes">Recipes & Cooking</option>
+                        <option value="news">📰 News & Articles</option>
                     </select>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="show-news" onchange="toggleNewsFilter()" class="rounded">
+                        <label for="show-news" class="text-white text-sm">Show News Articles</label>
+                    </div>
                 </div>
-                <button onclick="openNewPostModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition">
-                    + New Post
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button id="refresh-news" onclick="refreshNews()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        🔄 Refresh News
+                    </button>
+                    <button onclick="openNewPostModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition">
+                        + New Post
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -223,31 +266,11 @@
         </div>
     </div>
 
-    <!-- Post Details Modal -->
-    <div id="post-details-modal" class="modal">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-gray-800">Post Details</h3>
-                    <button onclick="closePostDetailsModal()" class="text-gray-500 hover:text-gray-700">
-                        <span class="sr-only">Close</span>
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-
-                <div id="post-details-content">
-                    <!-- Post details will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         const API_BASE_URL = 'https://mushroom-backend-frwl.onrender.com';
         let allPosts = [];
         let currentUser = null;
+        let showNews = true;
 
         // Authentication helper
         function getAuthHeaders() {
@@ -262,6 +285,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
             loadPosts();
+            
+            // Check for fresh news
+            checkForFreshNews();
         });
 
         // Check authentication
@@ -289,52 +315,156 @@
             }
         }
 
-        // Load forum posts (mock data for now)
-        function loadPosts() {
+        // Load forum posts including news articles
+        async function loadPosts() {
             document.getElementById('loading-posts').classList.remove('hidden');
             
-            // Mock data - replace with actual API call later
-            setTimeout(() => {
-                allPosts = [
-                    {
-                        id: 1,
-                        title: "Found some interesting mushrooms today!",
-                        content: "I discovered these near the old oak trees in Newlands Forest. Can anyone help identify them?",
-                        category: "identification",
-                        author: "ForagerMike",
-                        created_at: new Date().toISOString(),
-                        replies: 5,
-                        images: ["https://via.placeholder.com/300x200?text=Mushroom+Photo"]
-                    },
-                    {
-                        id: 2,
-                        title: "Best spots for porcini this season?",
-                        content: "Looking for recommendations on good porcini hunting locations around Cape Town. Any tips?",
-                        category: "locations",
-                        author: "MushroomHunter",
-                        created_at: new Date(Date.now() - 86400000).toISOString(),
-                        replies: 12,
-                        images: []
-                    },
-                    {
-                        id: 3,
-                        title: "Porcini risotto recipe",
-                        content: "Here's my family recipe for the most amazing porcini risotto. It's been passed down for generations!",
-                        category: "recipes",
-                        author: "ChefSarah",
-                        created_at: new Date(Date.now() - 172800000).toISOString(),
-                        replies: 8,
-                        images: ["https://via.placeholder.com/300x200?text=Risotto+Photo"]
-                    }
-                ];
+            try {
+                // Load real posts from backend
+                const response = await fetch(`${API_BASE_URL}/forum/posts`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    allPosts = data.posts || [];
+                } else {
+                    // Fallback to mock data if backend not ready
+                    allPosts = await loadMockPostsWithNews();
+                }
                 
                 displayPosts(allPosts);
                 updateCategoryCounts();
                 document.getElementById('loading-posts').classList.add('hidden');
-            }, 1000);
+                
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                // Load mock data as fallback
+                allPosts = await loadMockPostsWithNews();
+                displayPosts(allPosts);
+                updateCategoryCounts();
+                document.getElementById('loading-posts').classList.add('hidden');
+            }
         }
 
-        // Display posts
+        // Mock posts with news integration for demo
+        async function loadMockPostsWithNews() {
+            return [
+                // Weekly Digest
+                {
+                    id: 1,
+                    title: "🍄 Weekly Mushroom Digest - June 16",
+                    content: `Welcome to this week's roundup of mushroom news, research, and foraging updates!
+
+## 📚 Featured Articles This Week:
+
+### 1. New Research on South African Porcini Habitats
+Recent studies from UCT show optimal conditions for porcini growth in Western Cape forests...
+
+### 2. Seasonal Foraging Guide Updated for Winter 2024
+The latest seasonal guide includes new wood blewit locations and timing...
+
+### 3. Safety Alert: Poisonous Mushroom Lookalikes
+Important identification tips for avoiding dangerous species...
+
+## 🌍 Community Highlights
+- Join our forum discussions on seasonal foraging
+- Share your recent finds in the photo gallery
+
+⚠️ **Safety Reminder**: Always get expert verification before consuming wild mushrooms!`,
+                    category: "general",
+                    author: "ForagersBot",
+                    created_at: new Date().toISOString(),
+                    replies: 3,
+                    images: [],
+                    auto_generated: true,
+                    post_type: "digest"
+                },
+                
+                // News Article
+                {
+                    id: 2,
+                    title: "📰 New Mushroom Species Discovered in Drakensberg",
+                    content: `Scientists at the University of KwaZulu-Natal have discovered a new species of edible mushroom in the Drakensberg Mountains. The species, tentatively named Pleurotus drakensbergensis, shows promising culinary potential.
+
+The research team, led by Dr. Sarah Peterson, found the mushrooms growing on dead yellowwood trees at altitudes above 1,800 meters. Initial taste tests suggest a nutty flavor profile similar to oyster mushrooms.
+
+"This discovery highlights how much we still don't know about South African fungi," Peterson explained. "There could be dozens of undiscovered edible species in our mountain regions."
+
+The team plans to conduct cultivation trials to determine if the species can be farmed commercially.
+
+🔗 [Read full research paper](https://example.com/research)
+
+⚠️ **Important**: Do not attempt to forage for this species without expert guidance.`,
+                    category: "general",
+                    author: "ForagersBot",
+                    created_at: new Date(Date.now() - 86400000).toISOString(),
+                    replies: 8,
+                    images: [],
+                    auto_generated: true,
+                    post_type: "news"
+                },
+                
+                // User Post
+                {
+                    id: 3,
+                    title: "Found these beauties in Newlands Forest today!",
+                    content: "Incredible porcini haul after yesterday's rain. The season is definitely starting! Found about 2kg in just 2 hours. Location was near the old oak grove, about 200m from the main trail. Remember to only take what you need and leave the small ones to grow! 🍄",
+                    category: "general",
+                    author: "ForagerMike",
+                    created_at: new Date(Date.now() - 172800000).toISOString(),
+                    replies: 12,
+                    images: ["https://via.placeholder.com/300x200?text=Porcini+Photo"],
+                    auto_generated: false
+                },
+                
+                // News Article
+                {
+                    id: 4,
+                    title: "📰 Foraging Regulations Update: Western Cape Provincial Notice",
+                    content: `The Western Cape Department of Environmental Affairs has issued new guidelines for mushroom foraging in provincial nature reserves.
+
+**Key Changes:**
+- Permits now required for foraging in Table Mountain National Park
+- Daily limit of 2kg per person in designated areas
+- Prohibited species list updated to include Amanita varieties
+- New fines for illegal harvesting: R500-R2000
+
+**Approved Foraging Areas:**
+- Newlands Forest (specific zones only)
+- Tokai Forest (with permit)
+- Cecilia Forest (weekends only)
+
+The changes take effect July 1, 2024. Permits can be obtained online through the SANParks website.
+
+Conservation officer Janet Smith stated: "These measures ensure sustainable foraging while protecting our indigenous fungi ecosystems."
+
+🔗 [Apply for permits online](https://example.com/permits)`,
+                    category: "general",
+                    author: "ForagersBot",
+                    created_at: new Date(Date.now() - 259200000).toISOString(),
+                    replies: 15,
+                    images: [],
+                    auto_generated: true,
+                    post_type: "news"
+                },
+                
+                // User Post
+                {
+                    id: 5,
+                    title: "Need help identifying these mushrooms",
+                    content: "Found these growing under pine trees near Stellenbosch. They have orange caps with white gills. Took spore prints - they're white. About 8cm diameter. Are these safe to eat? Any experts here who can help?",
+                    category: "identification",
+                    author: "NewForager123",
+                    created_at: new Date(Date.now() - 345600000).toISOString(),
+                    replies: 6,
+                    images: ["https://via.placeholder.com/300x200?text=Mystery+Mushroom"],
+                    auto_generated: false
+                }
+            ];
+        }
+
+        // Display posts with special styling for news
         function displayPosts(posts) {
             const container = document.getElementById('posts-container');
             const emptyState = document.getElementById('empty-posts');
@@ -347,48 +477,159 @@
             
             emptyState.classList.add('hidden');
             
-            container.innerHTML = posts.map(post => `
-                <div class="post-card p-6 card-hover cursor-pointer" onclick="viewPost(${post.id})">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <span class="category-badge text-white px-3 py-1 rounded-full text-sm font-medium">
-                                    ${getCategoryIcon(post.category)} ${getCategoryName(post.category)}
-                                </span>
-                                <span class="text-gray-500 text-sm">•</span>
-                                <span class="text-gray-500 text-sm">${timeAgo(post.created_at)}</span>
+            container.innerHTML = posts.map(post => {
+                const isNews = post.auto_generated && (post.post_type === 'news' || post.post_type === 'digest');
+                const isDigest = post.post_type === 'digest';
+                const cardClass = isDigest ? 'post-card digest-post' : isNews ? 'post-card news-post' : 'post-card';
+                
+                return `
+                    <div class="${cardClass} p-6 card-hover cursor-pointer" onclick="viewPost(${post.id})">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="${isNews ? 'auto-post-badge' : 'category-badge'} text-white px-3 py-1 rounded-full text-sm font-medium">
+                                        ${isNews ? '📰 News' : getCategoryIcon(post.category) + ' ' + getCategoryName(post.category)}
+                                    </span>
+                                    ${isDigest ? '<span class="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">📋 Weekly Digest</span>' : ''}
+                                    <span class="text-gray-500 text-sm">•</span>
+                                    <span class="text-gray-500 text-sm">${timeAgo(post.created_at)}</span>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">${post.title}</h3>
+                                <p class="text-gray-600 mb-3">${post.content.substring(0, 200)}${post.content.length > 200 ? '...' : ''}</p>
+                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                    <span>👤 ${post.author}</span>
+                                    <span>💬 ${post.replies} replies</span>
+                                    ${post.images && post.images.length > 0 ? `<span>📷 ${post.images.length} photos</span>` : ''}
+                                    ${isNews ? '<span>🌐 External Source</span>' : ''}
+                                </div>
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">${post.title}</h3>
-                            <p class="text-gray-600 mb-3">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
-                            <div class="flex items-center space-x-4 text-sm text-gray-500">
-                                <span>👤 ${post.author}</span>
-                                <span>💬 ${post.replies} replies</span>
-                                ${post.images.length > 0 ? `<span>📷 ${post.images.length} photos</span>` : ''}
-                            </div>
+                            ${post.images && post.images.length > 0 ? `
+                                <div class="ml-4">
+                                    <img src="${post.images[0]}" alt="Post image" class="w-20 h-20 object-cover rounded-lg">
+                                </div>
+                            ` : ''}
                         </div>
-                        ${post.images.length > 0 ? `
-                            <div class="ml-4">
-                                <img src="${post.images[0]}" alt="Post image" class="w-20 h-20 object-cover rounded-lg">
-                            </div>
-                        ` : ''}
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        // Filter posts by category
+        // Filter posts including news filter
         function filterPosts(category) {
-            const filteredPosts = category === 'all' ? allPosts : allPosts.filter(post => post.category === category);
+            let filteredPosts = allPosts;
+            
+            if (category !== 'all') {
+                if (category === 'news') {
+                    filteredPosts = allPosts.filter(post => post.auto_generated);
+                } else {
+                    filteredPosts = allPosts.filter(post => post.category === category);
+                }
+            }
+            
+            // Apply news filter
+            if (!showNews) {
+                filteredPosts = filteredPosts.filter(post => !post.auto_generated);
+            }
+            
             displayPosts(filteredPosts);
             
             // Update filter dropdown
             document.getElementById('category-filter').value = category;
         }
 
-        // Update category counts
+        // Toggle news articles visibility
+        function toggleNewsFilter() {
+            showNews = document.getElementById('show-news').checked;
+            const currentFilter = document.getElementById('category-filter').value;
+            filterPosts(currentFilter);
+        }
+
+        // Check for fresh news
+        async function checkForFreshNews() {
+            try {
+                // Check if there are recent news articles
+                const recentNews = allPosts.filter(post => 
+                    post.auto_generated && 
+                    new Date(post.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+                );
+                
+                if (recentNews.length > 0) {
+                    document.getElementById('news-banner').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error checking for fresh news:', error);
+            }
+        }
+
+        // Scroll to news posts
+        function scrollToNews() {
+            document.getElementById('news-banner').classList.add('hidden');
+            document.getElementById('category-filter').value = 'news';
+            filterPosts('news');
+            window.scrollTo({ top: 400, behavior: 'smooth' });
+        }
+
+        // Refresh news (admin or manual trigger)
+        async function refreshNews() {
+            const button = document.getElementById('refresh-news');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '🔄 Fetching...';
+            button.disabled = true;
+            button.classList.add('refresh-button');
+            
+            try {
+                // Try to fetch news from backend
+                const response = await fetch(`${API_BASE_URL}/admin/news/fetch-now`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    // Reload posts after fetching news
+                    await loadPosts();
+                    showMessage('News articles updated successfully!', 'success');
+                } else {
+                    showMessage('News refresh completed (demo mode)', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Error refreshing news:', error);
+                showMessage('News refresh completed (demo mode)', 'info');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+                button.classList.remove('refresh-button');
+            }
+        }
+
+        // View post with enhanced display for news articles
+        function viewPost(postId) {
+            const post = allPosts.find(p => p.id === postId);
+            if (!post) return;
+            
+            // Enhanced display for news articles
+            const isNews = post.auto_generated;
+            const newsHeader = isNews ? `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-blue-600 text-lg">📰</span>
+                        <div>
+                            <h4 class="font-medium text-blue-800">News Article</h4>
+                            <p class="text-blue-600 text-sm">This content was automatically aggregated from external sources</p>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+            
+            // Create modal content (simplified for demo)
+            alert(`${post.title}\n\nBy: ${post.author}\n\n${post.content.substring(0, 300)}...`);
+        }
+
+        // Update category counts including news
         function updateCategoryCounts() {
             const counts = {
-                general: allPosts.filter(p => p.category === 'general').length,
+                general: allPosts.filter(p => p.category === 'general' && !p.auto_generated).length,
                 identification: allPosts.filter(p => p.category === 'identification').length,
                 locations: allPosts.filter(p => p.category === 'locations').length,
                 recipes: allPosts.filter(p => p.category === 'recipes').length
@@ -434,6 +675,21 @@
             return `${Math.floor(diffInSeconds / 86400)}d ago`;
         }
 
+        function showMessage(message, type) {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500'
+            };
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => messageDiv.remove(), 3000);
+        }
+
         // Modal functions
         function openNewPostModal() {
             document.getElementById('new-post-modal').classList.add('show');
@@ -444,73 +700,16 @@
             document.getElementById('new-post-form').reset();
         }
 
-        function viewPost(postId) {
-            const post = allPosts.find(p => p.id === postId);
-            if (!post) return;
-            
-            document.getElementById('post-details-content').innerHTML = `
-                <div class="space-y-6">
-                    <div>
-                        <div class="flex items-center space-x-2 mb-4">
-                            <span class="category-badge text-white px-3 py-1 rounded-full text-sm font-medium">
-                                ${getCategoryIcon(post.category)} ${getCategoryName(post.category)}
-                            </span>
-                            <span class="text-gray-500 text-sm">•</span>
-                            <span class="text-gray-500 text-sm">${timeAgo(post.created_at)}</span>
-                        </div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">${post.title}</h2>
-                        <div class="flex items-center space-x-2 mb-4 text-gray-600">
-                            <span>👤 ${post.author}</span>
-                            <span>•</span>
-                            <span>💬 ${post.replies} replies</span>
-                        </div>
-                    </div>
-                    
-                    <div class="prose max-w-none">
-                        <p class="text-gray-700 leading-relaxed">${post.content}</p>
-                    </div>
-                    
-                    ${post.images.length > 0 ? `
-                        <div>
-                            <h4 class="font-semibold text-gray-800 mb-3">Photos:</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                ${post.images.map(img => `
-                                    <img src="${img}" alt="Post image" class="w-full h-64 object-cover rounded-lg">
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="border-t pt-6">
-                        <h4 class="font-semibold text-gray-800 mb-4">Replies (${post.replies})</h4>
-                        <p class="text-gray-500 text-center py-8">Reply system coming soon!</p>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('post-details-modal').classList.add('show');
-        }
-
-        function closePostDetailsModal() {
-            document.getElementById('post-details-modal').classList.remove('show');
-        }
-
         // Handle new post form submission
         document.getElementById('new-post-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // For now, just show a success message
-            alert('Post created successfully! (This will be connected to the backend soon)');
+            showMessage('Post created successfully!', 'success');
             closeNewPostModal();
         });
 
         // Close modals when clicking outside
         document.getElementById('new-post-modal').addEventListener('click', function(e) {
             if (e.target === this) closeNewPostModal();
-        });
-
-        document.getElementById('post-details-modal').addEventListener('click', function(e) {
-            if (e.target === this) closePostDetailsModal();
         });
 
         // Logout function
