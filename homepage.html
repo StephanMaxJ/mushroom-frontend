@@ -95,6 +95,44 @@
       font-size: 12px;
       font-weight: bold;
     }
+
+    /* Community Navigation Styles */
+    .community-nav {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .community-button {
+      background: rgba(59, 130, 246, 0.9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .community-button:hover {
+      background: rgba(59, 130, 246, 1);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .forum-button {
+      background: rgba(16, 185, 129, 0.9);
+    }
+
+    .forum-button:hover {
+      background: rgba(16, 185, 129, 1);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
   </style>
 </head>
 
@@ -102,6 +140,16 @@
 
   <header class="bg-green-600 bg-opacity-90 pt-0 pb-2 shadow-md w-full flex justify-center">
     <div class="w-full max-w-4xl px-4 text-center pt-0 relative">
+      <!-- Community Navigation - Top Left -->
+      <div class="community-nav">
+        <a href="forum.html" class="community-button forum-button">
+          💬 Forum
+        </a>
+        <a href="chat.html" class="community-button">
+          🗨️ Live Chat
+        </a>
+      </div>
+
       <img 
         src="https://imgur.com/ZuSrjWH.jpg"  
         alt="Forager's Friend Logo"
@@ -111,7 +159,7 @@
         Mushroom foraging guide and condition checker
       </p>
       
-      <!-- User Navigation -->
+      <!-- User Navigation - Top Right -->
       <div id="user-nav" class="absolute top-4 right-4 text-white text-sm">
         <div class="flex items-center space-x-2">
           <span id="username-display" class="font-medium"></span>
@@ -199,9 +247,9 @@
     // Backend API URL
     const API_BASE_URL = 'https://mushroom-backend-frwl.onrender.com';
 
-    // Authentication state
-    let authToken = localStorage.getItem('token');
-    let currentUser = localStorage.getItem('username');
+    // Authentication state - Updated to support both storage methods
+    let authToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+    let currentUser = localStorage.getItem('username') || sessionStorage.getItem('username');
 
     // Check authentication on page load
     document.addEventListener('DOMContentLoaded', function() {
@@ -274,10 +322,12 @@
       }
     });
 
-    // Logout functionality
+    // Logout functionality - Updated to clear both storage methods
     function logout() {
       localStorage.removeItem('token');
       localStorage.removeItem('username');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('username');
       window.location.href = 'index.html';
     }
 
